@@ -1,21 +1,27 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <time.h>
 #include <string.h>
 
 #define	Print	printf
-#define	PRIME_TABLE_SIZE		80000
+#define	PRIME_TABLE_SIZE		100000
 
 #define	MESSAGE	"Hello World!!!"
 
 int PrimeCount = 0;
 int PrimeTable[PRIME_TABLE_SIZE];
 
-int GetRandomNumber (int RandomMax)
+void SetRandomSeed (void)
 {
 	srand (time(NULL));
+}
 
+int GetRandomNumber (long long RandomMax)
+{
+  Print ("%x\n", RAND_MAX);
+  if (RAND_MAX < 0x8000) {
+    return (rand() * rand()) % RandomMax + 1;
+  }
 	return rand() % RandomMax + 1;
 }
 
@@ -81,9 +87,9 @@ void GetTwoPrimes (int *PrimeA, int *PrimeB)
 	*PrimeB = PrimeTable[B];
 }
 
-long GetInverseModular (long e, long r)
+long long GetModularMultiplicativeInverse (long long e, long long r)
 {
-	long d;
+	long long d;
 	for (d = 0 ; d < r ; d++) {
 		if (e * d % r == 1) {
 			return d;
@@ -92,41 +98,41 @@ long GetInverseModular (long e, long r)
 	return -1;
 }
 
-int RSAGeneratePublicAndPrivateKeys (long PrimeA, long PrimeB, long *N, long *e, long *d)
+int RSAGeneratePublicAndPrivateKeys (long long PrimeA, long long PrimeB, long long *N, long long *e, long long *d)
 {
 
 	*N = PrimeA * PrimeB;
-	Print ("N = %ld * %ld = %ld\n", PrimeA, PrimeB, *N);
+	Print ("N = %lld * %lld = %lld\n", PrimeA, PrimeB, *N);
 
-	long r;
+	long long r;
 	r = (PrimeA - 1) * (PrimeB - 1);
-	Print ("r = (%ld - 1) * (%ld - 1) = %ld \n", (PrimeA), (PrimeB), r);
+	Print ("r = (%lld - 1) * (%lld - 1) = %lld \n", (PrimeA), (PrimeB), r);
 
-//	long e;
-//	long d;
 	do {
 		do {
 			*e = GetRandomNumber (r);
 
 		} while (GcdAlgorithm (r, *e) != 1);
-//	*e = 7;
-		Print ("e = %d\n", *e);
+		Print ("e = %lld\n", *e);
 
-		*d = GetInverseModular (*e, r);
-		Print ("d = %ld\n", *d);
-		Print ("%ld \n", (*e) * (*d));
+		*d = GetModularMultiplicativeInverse (*e, r);
+		Print ("d = %lld\n", *d);
+		Print ("%lld \n", (*e) * (*d));
 	} while (*d == -1);
-	Print ("e * d % r = %d\n", ((*e) * (*d)) % r);
-	Print ("The Public Key is [%ld,%ld]\n", *N, *e);
-	Print ("The Private Key is [%ld,%ld]\n", *N, *d);
+  
+	Print ("e * d %% r = %lld\n", ((*e) * (*d)) % r);
+	Print ("The Public Key is [%lld,%lld]\n", *N, *e);
+	Print ("The Private Key is [%lld,%lld]\n", *N, *d);
+
+  return 0;
 }
 
-void Encrypt (char *Message, long **Encryption, int *Length, long N, long e)
+void Encrypt (char *Message, long long **Encryption, int *Length, long long N, long long e)
 {
-	long i, j;
-	long temp;
+	long long i, j;
+	long long temp;
 
-	*Encryption = malloc (strlen (Message) * sizeof (long));
+	*Encryption = malloc (strlen (Message) * sizeof (long long));
 
 //	Print ("Encryption = %p\n", *Encryption);
 
@@ -142,17 +148,16 @@ void Encrypt (char *Message, long **Encryption, int *Length, long N, long e)
 				break;
 			}
 		}
-//		temp = temp % N;
-		Print ("[%d] %lld\n", i, temp);
+		Print ("[%03lld] 0x%016llx\n", i, temp);
 		(*Encryption)[i] = temp;
 	}
 	*Length = strlen (Message);
 }
 
-void Decrypt (long *Encryption, char **Message, int Length, long N, long d)
+void Decrypt (long long *Encryption, char **Message, int Length, long long N, long long d)
 {
-	long i, j;
-	long temp;
+	long long i, j;
+	long long temp;
 
 	*Message = malloc ((Length + 1) * sizeof (char));
 
@@ -169,10 +174,9 @@ void Decrypt (long *Encryption, char **Message, int Length, long N, long d)
 				break;
 			}
 		}
-//		temp = temp % N;
 		(*Message)[i] = temp;
-		Print ("[%03d] 0x%02x ", i, temp);
-		Print ("%c", temp);
+		Print ("[%03lld] 0x%02llx ", i, temp);
+		Print ("%c", (char)temp);
 		Print ("\n");
 
 	}
@@ -187,18 +191,20 @@ int main(void)
 	// Generate RSA Public and Private keys
 	//
 	int PrimeA,PrimeB;
-	long N;
-	long e,d;
+	long long N;
+	long long e,d;
 
 	//
 	// Encrypt and decrypt message
 	//
-	long *Encryption;
+	long long *Encryption;
 	int Length;
 	char *Message;
 
 	time_t start;
 	time_t end;
+
+  SetRandomSeed ();
 
 	GeneratePrimesTable ();
 
@@ -228,6 +234,7 @@ int main(void)
 
 	free (Encryption);
 	free (Message);
+
 }
 
 
