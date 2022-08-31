@@ -4,7 +4,7 @@
 #include <string.h>
 
 #define	Print	printf
-#define	PRIME_TABLE_SIZE		100000
+#define	PRIME_TABLE_SIZE		10000000
 
 #define	MESSAGE	"Hello World!!!"
 
@@ -18,16 +18,16 @@ void SetRandomSeed (void)
 
 int GetRandomNumber (long long RandomMax)
 {
-  Print ("%x\n", RAND_MAX);
-  if (RAND_MAX < 0x8000) {
-    return (rand() * rand()) % RandomMax + 1;
-  }
+
+	if (RAND_MAX < 0x8000) {
+		return (rand() * rand()) % RandomMax + 1;
+	}
 	return rand() % RandomMax + 1;
 }
 
-int GcdAlgorithm (int Dividend ,int Divisor)
+long long GcdAlgorithm (long long Dividend ,long long Divisor)
 {
-	int Remainder;
+	long long Remainder;
 	if (Divisor == 0) {
 		return -1;
 	}
@@ -38,6 +38,28 @@ int GcdAlgorithm (int Dividend ,int Divisor)
 		return Divisor;
 	}
 	return GcdAlgorithm (Divisor, Remainder);
+}
+
+long long ExtendGcd (long long a, long long b, long long *x, long long *y)
+{
+	if (b == 0) {
+		*x = 1;
+		*y = 0;
+		return a;
+	}
+	long long d = ExtendGcd (b, a % b, y, x);
+	*y -= a / b * *x;
+
+	if (*x > 0) {
+		if (a / b * *x < 0) {
+			Print ("ExtendGcd: long long overflow\n");
+		}
+	} else {
+		if (a / b * *x > 0) {
+			Print ("ExtendGcd: long long overflow\n");
+		}	
+	}
+	return d;
 }
 
 int isPrime (int Number)
@@ -89,13 +111,46 @@ void GetTwoPrimes (int *PrimeA, int *PrimeB)
 
 long long GetModularMultiplicativeInverse (long long e, long long r)
 {
+	long long x,y;
+	long long Remaining;	
+
+	Remaining = ExtendGcd (r, e, &x, &y);
+
+	if (Remaining != 1) {
+		Print ("=========\n");
+		Print ("Remaining = %lld\n", Remaining);
+		Print ("r = %lld, e = %lld\n", r, e);
+		Print ("=========\n");
+		return -1;
+	}
+	if (y < 0) {
+		Print ("+++++++++\n");
+		Print ("r = %lld, y = %lld\n",r,y);
+		Print ("+++++++++\n");
+
+		Print ("%lld * %lld + %lld * %lld = %lld\n", r, x, e, y, r*x+e*y);
+		return r + y;
+	}
+	Print ("%lld * %lld + %lld * %lld = %lld\n", r, x, e, y, r*x+e*y);
+	return y;
+/*
 	long long d;
+	int flag = 1;
 	for (d = 0 ; d < r ; d++) {
+		if (e * d < 0 && flag) {
+			flag = 0;
+			Print ("e: %lld, d: %lld!!!\n", e, d);
+			Print ("e: %08llx, d: %08llx!!!\n", e, d);
+			Print ("overflow!!!\n");
+		}
 		if (e * d % r == 1) {
 			return d;
 		}
 	}
+	Print ("e: %lld, d: %lld!!!\n", e, d);
+	Print ("e: %08llx, d: %08llx!!!\n", e, d);
 	return -1;
+*/
 }
 
 int RSAGeneratePublicAndPrivateKeys (long long PrimeA, long long PrimeB, long long *N, long long *e, long long *d)
@@ -112,6 +167,7 @@ int RSAGeneratePublicAndPrivateKeys (long long PrimeA, long long PrimeB, long lo
 		do {
 			*e = GetRandomNumber (r);
 
+
 		} while (GcdAlgorithm (r, *e) != 1);
 		Print ("e = %lld\n", *e);
 
@@ -120,7 +176,7 @@ int RSAGeneratePublicAndPrivateKeys (long long PrimeA, long long PrimeB, long lo
 		Print ("%lld \n", (*e) * (*d));
 	} while (*d == -1);
   
-	Print ("e * d %% r = %lld\n", ((*e) * (*d)) % r);
+//	Print ("e * d %% r = %lld\n", ((*e) * (*d)) % r);
 	Print ("The Public Key is [%lld,%lld]\n", *N, *e);
 	Print ("The Private Key is [%lld,%lld]\n", *N, *d);
 
@@ -204,14 +260,22 @@ int main(void)
 	time_t start;
 	time_t end;
 
-  SetRandomSeed ();
+	SetRandomSeed ();
 
 	GeneratePrimesTable ();
 
 
 	GetTwoPrimes (&PrimeA, &PrimeB);
+
+	Print ("\n\n");
+
+//	PrimeA = 11;
+//	PrimeB = 3;
 	Print ("Prime A: %d\n", PrimeA);
 	Print ("Prime B: %d\n", PrimeB);
+
+
+
 
 	start = clock();
 	RSAGeneratePublicAndPrivateKeys (PrimeA, PrimeB, &N, &e, &d);
