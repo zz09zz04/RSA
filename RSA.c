@@ -4,7 +4,7 @@
 #include <string.h>
 
 #define	Print	printf
-#define	PRIME_TABLE_SIZE		10000000
+#define	PRIME_TABLE_SIZE		100000
 
 #define	MESSAGE	"Hello World!!!"
 
@@ -268,14 +268,8 @@ int main(void)
 	GetTwoPrimes (&PrimeA, &PrimeB);
 
 	Print ("\n\n");
-
-//	PrimeA = 11;
-//	PrimeB = 3;
 	Print ("Prime A: %d\n", PrimeA);
 	Print ("Prime B: %d\n", PrimeB);
-
-
-
 
 	start = clock();
 	RSAGeneratePublicAndPrivateKeys (PrimeA, PrimeB, &N, &e, &d);
