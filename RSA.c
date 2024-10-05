@@ -183,6 +183,23 @@ int RSAGeneratePublicAndPrivateKeys (long long PrimeA, long long PrimeB, long lo
   return 0;
 }
 
+// Function to calculate power with modulus
+long long pow_mod(long long base, long long exponent, long long modulus) {
+    if (modulus == 1) return 0; // Any number mod 1 is 0
+    long long result = 1;
+    base = base % modulus; // Handle case where base >= modulus
+
+    while (exponent > 0) {
+        if (exponent % 2 == 1) { // If exponent is odd
+            result = (result * base) % modulus;
+        }
+        base = (base * base) % modulus; // Square the base
+        exponent /= 2; // Divide exponent by 2
+    }
+
+    return result;
+}
+
 void Encrypt (char *Message, long long **Encryption, int *Length, long long N, long long e)
 {
 	long long i, j;
@@ -195,6 +212,7 @@ void Encrypt (char *Message, long long **Encryption, int *Length, long long N, l
 	Print ("The Public Key is [%lld , %lld]\n", N, e);
 	Print ("Encrypt the message: %s\n", Message);
 	for (i = 0 ; i < strlen (Message) ; i++) {
+/*
 		temp = 1;
 //		Print ("[%d] %d\n", i, Message[i]);
 		for (j = 0 ; j < e ; j++) {
@@ -204,6 +222,8 @@ void Encrypt (char *Message, long long **Encryption, int *Length, long long N, l
 				break;
 			}
 		}
+*/
+		temp = pow_mod(Message[i], e, N);
 		Print ("[%03lld] 0x%016llx\n", i, temp);
 		(*Encryption)[i] = temp;
 	}
@@ -223,6 +243,7 @@ void Decrypt (long long *Encryption, char **Message, int Length, long long N, lo
 	for (i = 0 ; i < Length ; i++) {
 		temp = 1;
 //		Print ("[%d] %d\n", i, Encryption[i]);
+/*
 		for (j = 0 ; j < d ; j++) {
 			temp = temp * Encryption[i] % N;
 			if (temp < 0) {
@@ -230,6 +251,8 @@ void Decrypt (long long *Encryption, char **Message, int Length, long long N, lo
 				break;
 			}
 		}
+*/
+		temp = pow_mod(Encryption[i], d, N);
 		(*Message)[i] = temp;
 		Print ("[%03lld] 0x%02llx ", i, temp);
 		Print ("%c", (char)temp);
